@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Disease Detection</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Crop Disease Detection</h1>
+        <p>Upload an image of your crop to check for diseases.</p>
+        <input type="file" id="imageInput" accept="image/*">
+        <button id="predictBtn">Predict</button>
+        <h3 id="result"></h3>
+       <div id="uploadedImageContainer">
+            <img id="uploadedImage" src="" alt="Uploaded Image">
+        </div>
+    </div>
+
+
+    <script>
+        document.getElementById('predictBtn').onclick = function() {
+            const imageInput = document.getElementById('imageInput');
+            const uploadedImage = document.getElementById('uploadedImage');
+
+            if (imageInput.files.length === 0) {
+                alert('Please select an image!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+
+            // Clear the result and image before making a prediction
+            document.getElementById('result').innerText = '';
+            uploadedImage.style.display = 'none'; // Hide the image initially
+
+            // Display the uploaded image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImage.src = e.target.result;
+                uploadedImage.style.display = 'block'; // Show the image
+            }
+            reader.readAsDataURL(imageInput.files[0]);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('result').innerText = 'Error: ' + data.error;
+
+                } else {
+                    document.getElementById('result').innerText = 'Predicted Disease: ' + data.disease;
+                }
+                document.getElementById('imageInput').value = ''; // Clear the input
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = 'Error: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html>
